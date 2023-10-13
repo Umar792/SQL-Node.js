@@ -3,6 +3,7 @@ const router = express.Router();
 const connection = require("../db/conn");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const cookie = require("cookie-parser");
 
 // ------------ create user
 router.post("/user/signup", async (req, res) => {
@@ -102,13 +103,35 @@ router.post("/login", async (req, res) => {
         }
 
         const token = await jwt.sign({ id: data[0].id }, "umarali");
-        res.status(200).json({
+        res.cookie("token", token).status(200).json({
           success: true,
           token,
           data,
         });
       }
     );
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+// ===== logout
+router.post("/logout", async (req, res) => {
+  try {
+    res
+      .clearCookie("token", {
+        expires: 0,
+        secure: true, // Match the 'secure' flag used when setting the cookie
+        httpOnly: true,
+      })
+      .status(200)
+      .json({
+        success: true,
+        message: "Logout Successfuly",
+      });
   } catch (error) {
     res.status(400).json({
       success: false,
