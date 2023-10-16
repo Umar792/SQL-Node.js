@@ -206,4 +206,55 @@ router.post(
   }
 );
 
+// ======== get post of login users
+router.get("/getpost", TokenVerify, async (req, res) => {
+  try {
+    connection.query(
+      "SELECT * FROM post AS p WHERE p.userId = ?",
+      [req.user.id],
+      (err, data) => {
+        if (err) {
+          return res.status(400).json({
+            success: false,
+            message: err.message,
+          });
+        } else {
+          res.status(200).json({
+            success: true,
+            data,
+          });
+        }
+      }
+    );
+  } catch (error) {}
+});
+
+// ======== delet post
+router.delete("/deletePost/:id", TokenVerify, async (req, res) => {
+  connection.query(
+    "DELETE FROM post WHERE id=?",
+    [req.params.id],
+    (err, data) => {
+      if (err) {
+        return res.status(400).json({
+          success: false,
+          message: err.message,
+        });
+      } else {
+        if (data.affectedRows === 0) {
+          return res.status(400).json({
+            success: false,
+            message: "No Post Found Please Enter Valid Post Id",
+          });
+        }
+        res.status(200).json({
+          success: true,
+          message: "Post Delete Successfully",
+        });
+      }
+    }
+  );
+});
+// ========
+
 module.exports = router;
