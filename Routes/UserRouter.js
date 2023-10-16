@@ -4,6 +4,8 @@ const connection = require("../db/conn");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cookie = require("cookie-parser");
+const upload = require("../multer/multer");
+const TokenVerify = require("../middleware/TokenVerify");
 
 // ------------ create user
 router.post("/user/signup", async (req, res) => {
@@ -64,7 +66,6 @@ router.post("/user/signup", async (req, res) => {
     });
   }
 });
-
 // =========== login user
 router.post("/login", async (req, res) => {
   try {
@@ -117,7 +118,6 @@ router.post("/login", async (req, res) => {
     });
   }
 });
-
 // ===== logout
 router.post("/logout", async (req, res) => {
   try {
@@ -139,7 +139,6 @@ router.post("/logout", async (req, res) => {
     });
   }
 });
-
 // ===== get all users
 router.get("/allusers", async (req, res) => {
   try {
@@ -163,5 +162,48 @@ router.get("/allusers", async (req, res) => {
     });
   }
 });
+// ========== create post
+
+router.post(
+  "/addPost",
+  TokenVerify,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const { des } = req.body;
+      const image = req.file;
+      console.log(req.user.id);
+      if (!des || !image) {
+        return res.status(400).json({
+          success: false,
+          message: "Please Enter All Fields",
+        });
+      }
+
+      connection.query(
+        "INSERT INTO post (des, image, userId) VALUES (?, ?, ?)",
+        [des, image.filename, req.user.id], // Use image.filename to insert the file name or file path
+        (err, data) => {
+          if (err) {
+            return res.status(400).json({
+              success: false,
+              message: err.message,
+            });
+          } else {
+            res.status(200).json({
+              success: true,
+              message: "Post Created Successfully",
+            });
+          }
+        }
+      );
+    } catch (error) {
+      res.status(200).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+);
 
 module.exports = router;
